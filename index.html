@@ -1,0 +1,967 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>父の日体験 - 荷物で伝える、言えない気持ち</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;500;700&family=Shippori+Mincho:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Noto Sans JP', sans-serif;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            touch-action: none;
+            background: #000; 
+        }
+
+        .bg-sunset {
+            background-image: url('sky3.jpg'); 
+            background-size: cover;
+            background-position: center;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            filter: blur(10px) brightness(0.55);
+            transform: scale(1.1);
+        }
+
+        .bg-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            background: rgba(20, 20, 20, 0.45);
+        }
+
+        .view {
+            display: none;
+            height: 100vh;
+            width: 100vw;
+            padding: 0;
+            box-sizing: border-box;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .view.active {
+            display: flex;
+        }
+
+        .view-center {
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .mincho {
+            font-family: 'Shippori Mincho', serif;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.6);
+        }
+
+        .fade-in {
+            animation: fadeIn 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .glass {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 28px;
+        }
+
+        .suitcase {
+            width: 90%;
+            max-width: 520px;
+            height: 260px;
+            border: 2px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 40px;
+            position: relative;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 20px;
+            align-content: flex-start;
+            gap: 10px;
+            overflow-y: auto;
+            transition: all 0.4s;
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .suitcase::-webkit-scrollbar { display: none; }
+
+        /* 修改：物品卡片样式，确保长度自适应且不换行 */
+        .item-card {
+            background: rgba(255, 255, 255, 0.98);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            cursor: pointer;
+            user-select: none;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+            white-space: nowrap; /* 保持文字一行显示 */
+            width: fit-content; /* 宽度随内容变化 */
+        }
+
+        .item-card:active { transform: scale(0.95); }
+
+        .item-in-suitcase {
+            animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+            background: rgba(255, 255, 255, 0.9);
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0.5); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        .bubble {
+            padding: 12px 22px;
+            border-radius: 100px;
+            margin: 8px;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            font-size: 0.9rem;
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            color: rgba(255, 255, 255, 0.9);
+            text-align: left;
+            line-height: 1.4;
+        }
+
+        .bubble-selected {
+            background: #fff !important;
+            color: #ff5e62 !important;
+            font-weight: 800;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.6);
+            transform: scale(1.05);
+            border-color: #fff !important;
+        }
+
+        #music-toggle {
+            position: fixed;
+            top: 25px;
+            left: 25px;
+            z-index: 100;
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            padding: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .infinite-scroll-container {
+            flex: 1;
+            overflow-y: auto;
+            width: 100%;
+            padding: 160px 16px 140px 16px; 
+            mask-image: linear-gradient(to bottom, transparent, black 15%, black 85%, transparent);
+            scrollbar-width: none; 
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-content: flex-start;
+        }
+        .infinite-scroll-container::-webkit-scrollbar { display: none; }
+
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .modal-content {
+            background: #fff;
+            color: #333;
+            width: 90%;
+            max-width: 400px;
+            padding: 30px;
+            border-radius: 24px;
+            text-align: center;
+            animation: popIn 0.4s ease-out;
+        }
+
+        #final-send-btn-container {
+            position: fixed; bottom: 40px; left: 0; right: 0; display: none; justify-content: center; z-index: 100;
+        }
+
+        .receive-step {
+            display: none;
+            width: 100%;
+            flex-direction: column;
+            align-items: center;
+        }
+        .receive-step.active { display: flex; }
+
+        .loading-view {
+            position: fixed;
+            inset: 0;
+            background: #000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+        }
+
+        #ai-advice-bubble {
+            position: fixed;
+            bottom: 300px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            color: #fff;
+            opacity: 0;
+            transition: opacity 0.5s;
+            max-width: 85%;
+            pointer-events: none;
+            z-index: 10;
+            text-align: center;
+        }
+
+        #drag-proxy {
+            position: fixed;
+            pointer-events: none;
+            z-index: 9999;
+            display: none;
+            background: rgba(255,255,255,0.98);
+            color: #333;
+            padding: 10px 20px;
+            border-radius: 16px;
+            font-size: 0.95rem;
+            font-weight: 700;
+            white-space: nowrap;
+            box-shadow: 0 12px 30px rgba(0,0,0,0.4);
+            transform: rotate(4deg) scale(1.05);
+        }
+
+        .suitcase.drag-over {
+            border-color: rgba(255,255,255,0.9);
+            background: rgba(255,255,255,0.1);
+            box-shadow: 0 0 30px rgba(255,255,255,0.2);
+        }
+
+        .item-card.dragging {
+            opacity: 0.3;
+            transform: scale(0.9);
+        }
+    </style>
+</head>
+<body onclick="window.handleGlobalClick()">
+    <script>
+        // Safety net: if module script crashes, hide loading after 4s
+        setTimeout(() => {
+            const el = document.getElementById('app-loading');
+            if (el) el.style.display = 'none';
+        }, 4000);
+    </script>
+
+    <div id="app-loading" class="loading-view">
+        <p class="mincho text-xl animate-pulse">想いを読み込んでいます<span class="loading-dots"></span></p>
+    </div>
+
+    <div id="modal-link" class="modal-overlay" onclick="window.closeModal()">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <h3 class="font-bold text-lg mb-4">想いの準備ができました</h3>
+            <p class="text-sm text-gray-500 mb-6">以下のリンクをコピーしてLINEで送ってください。相手があなたの想いを受け取れます。</p>
+            <input id="share-url-input" type="text" readonly class="w-full bg-gray-100 p-3 rounded-lg text-xs mb-4 border focus:outline-none">
+            <button onclick="window.copyLink()" class="w-full bg-pink-500 text-white font-bold py-3 rounded-xl mb-3 shadow-lg">リンクをコピーする</button>
+            <button onclick="window.closeModal()" class="text-xs text-gray-400">閉じる</button>
+        </div>
+    </div>
+
+    <div class="bg-sunset"></div>
+    <div class="bg-overlay"></div>
+
+    <button id="music-toggle" onclick="window.toggleMusic(event)">
+        <svg id="music-icon-off" class="hidden" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="1" y1="1" x2="23" y2="23"></line><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+        <svg id="music-icon-on" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg>
+    </button>
+
+    <!-- 1. Intro View -->
+    <div id="view-intro" class="view view-center active">
+        <div class="fade-in max-w-xl px-10 pointer-events-none">
+            <h1 class="mincho text-4xl md:text-6xl mb-10 leading-tight">父は、出張へ。<br>子は、自立へ。</h1>
+            <p class="mincho text-lg md:text-xl opacity-90 leading-relaxed">
+                同じ空の下、私たちは別々の道を歩み始める。<br>
+                言葉にできない想いを、一つの箱に詰め込んで。<br>
+                それは、最も静かで温かい「対話」になる。
+            </p>
+        </div>
+        <div class="absolute bottom-12 animate-bounce cursor-pointer" onclick="window.handleStartClick(event)">
+            <span class="text-xs font-bold tracking-widest opacity-60" id="start-text">TOUCH TO START</span>
+        </div>
+    </div>
+
+    <!-- 2. Role View -->
+    <div id="view-role" class="view view-center">
+        <h2 class="mincho text-3xl mb-8 px-10">どちらの準備を手伝いますか？</h2>
+        <div class="flex flex-col md:flex-row gap-8 w-full max-xl px-6">
+            <button onclick="window.selectRole('child')" class="glass p-10 hover:bg-white/20 transition-all flex-1 group">
+                <span class="text-5xl block mb-4 group-hover:scale-110 transition">🎓</span>
+                <span class="text-xl font-bold">自立する「子」として</span>
+                <span class="text-xs block mt-2 opacity-60">父の出張の荷造りを手伝う</span>
+            </button>
+            <button onclick="window.selectRole('father')" class="glass p-10 hover:bg-white/20 transition-all flex-1 group">
+                <span class="text-5xl block mb-4 group-hover:scale-110 transition">💼</span>
+                <span class="text-xl font-bold">出張する「父」として</span>
+                <span class="text-xs block mt-2 opacity-60">子の自立の荷造りを手伝う</span>
+            </button>
+        </div>
+        <div class="mt-12 w-full max-w-sm px-6 text-center">
+            <p class="text-[10px] uppercase tracking-widest opacity-40 mb-2">✨ Situation Setting</p>
+            <input type="text" id="situation-input" placeholder="例：海外出張 / 初めての一人暮らし" class="w-full bg-white/10 border border-white/20 rounded-full px-6 py-3 text-sm focus:outline-none focus:bg-white/20 transition">
+        </div>
+    </div>
+
+    <!-- 3. Packing View -->
+    <div id="view-pack" class="view view-center">
+        <div class="mb-6 px-10 text-center">
+            <h2 class="mincho text-2xl mb-1" id="pack-title">荷造りの時間</h2>
+            <p id="pack-subtitle" class="text-[11px] opacity-70">アイテムをタップしてスーツケースに運びましょう。</p>
+        </div>
+        <!-- 修改：使用 flex-wrap 且居中，让卡片长度自适应 -->
+        <div class="flex flex-wrap justify-center gap-3 mb-6 w-full max-w-lg px-4 min-h-[160px]" id="item-pool"></div>
+        
+        <button onclick="window.manualRefresh()" id="refresh-btn" class="mb-6 w-12 h-12 rounded-full border border-white/30 flex items-center justify-center hover:bg-white/20 active:scale-90 transition shadow-lg backdrop-blur-sm">
+            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M2.5 22v-6h6M2 11.5a10 10 0 0 1 18.8-4.3M22 12.5a10 10 0 0 1-18.8 4.3"/></svg>
+        </button>
+
+        <div id="ai-advice-bubble" class="ai-advice">✨ アドバイスを考え中...</div>
+
+        <div class="suitcase" id="suitcase">
+            <div id="suitcase-empty" class="absolute inset-0 flex items-center justify-center opacity-40 pointer-events-none">
+                <span class="text-xs font-bold uppercase tracking-widest">Packing Area</span>
+            </div>
+        </div>
+
+        <div id="drag-proxy"></div>
+
+        <div id="pack-complete-btn" class="hidden mt-8 fade-in text-center">
+            <button onclick="window.nextView('view-reason')" class="bg-white text-orange-600 px-14 py-3 rounded-full font-bold shadow-xl hover:bg-orange-50 transition active:scale-95">パッキング完了</button>
+        </div>
+    </div>
+
+    <!-- 4. Reason View -->
+    <div id="view-reason" class="view overflow-hidden">
+        <div class="fixed top-0 left-0 right-0 z-50 pt-20 pb-6 bg-gradient-to-b from-black/90 to-transparent">
+            <h2 class="mincho text-2xl text-center px-10" id="reason-title">なぜ、これらを選びましたか？</h2>
+        </div>
+        <div class="infinite-scroll-container" id="bubble-container" onscroll="window.handleScroll(this)"></div>
+        <div id="final-send-btn-container">
+            <button onclick="window.generateFinalLetter()" class="btn-send active:scale-95">✨ 手紙を書いて届ける</button>
+        </div>
+    </div>
+
+    <!-- 5. Final Letter View -->
+    <div id="view-final" class="view view-center bg-black/60 overflow-y-auto">
+        <div class="py-20 px-6 w-full fade-in">
+            <p id="letter-hint" class="letter-edit-hint">✨ 文字をタップして自由に修正できます</p>
+            <div id="letter-display" class="letter-content mb-12" contenteditable="true"></div>
+            <div class="flex flex-col gap-4 items-center">
+                <button id="save-send-btn" onclick="window.saveAndShare()" class="btn-send w-full max-w-xs active:scale-95">想いをLINEで送る</button>
+                <button id="reveal-sender-btn" onclick="window.startReveal()" class="hidden btn-send w-full max-w-xs active:scale-95 bg-gradient-to-r from-blue-400 to-indigo-500 text-white">相手の荷物を見る</button>
+                <button onclick="location.reload()" class="text-xs opacity-50 underline">最初に戻る</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 6. Receiver Reveal View -->
+    <div id="view-receive" class="view view-center bg-black/40 overflow-y-auto">
+        <div id="receive-step-1" class="receive-step active">
+            <h2 class="mincho text-2xl mb-12" id="receive-title">あなたへの荷物が届きました</h2>
+            <div class="suitcase" id="receive-suitcase"></div>
+            <p class="text-xs opacity-50 mt-10 animate-pulse">荷物を開けています...</p>
+        </div>
+        <div id="receive-step-2" class="receive-step">
+            <h2 class="mincho text-2xl mb-10">込められた想い</h2>
+            <div id="receive-bubbles" class="flex flex-wrap justify-center px-6 gap-3"></div>
+            <button onclick="window.showReceiveLetter()" class="mt-12 btn-send">手紙を読む</button>
+        </div>
+        <div id="receive-step-3" class="receive-step px-6 py-10">
+            <div id="receive-letter" class="letter-content mb-12"></div>
+            <button onclick="window.finalAccept()" class="btn-send w-full max-w-xs">想いを受け取る（完了）</button>
+        </div>
+    </div>
+
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+        import { getFirestore, doc, setDoc, getDoc, collection } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-firestore.js";
+        import { getAuth, signInAnonymously, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+        // --- Firebase Config ---
+        let firebaseConfig;
+        try {
+            firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : 'null');
+        } catch(e) { firebaseConfig = null; }
+
+        // ★ ここにご自身のFirebase設定を貼り付けてください
+        if (!firebaseConfig) {
+            firebaseConfig = {
+                apiKey: "YOUR_API_KEY",
+                authDomain: "YOUR_PROJECT.firebaseapp.com",
+                projectId: "YOUR_PROJECT_ID",
+                storageBucket: "YOUR_PROJECT.appspot.com",
+                messagingSenderId: "YOUR_SENDER_ID",
+                appId: "YOUR_APP_ID"
+            };
+        }
+
+        const app = initializeApp(firebaseConfig);
+        const db = getFirestore(app);
+        const auth = getAuth(app);
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+
+        // Global state
+        window.packedItems = [];
+        window.selectedTags = new Set();
+        window.currentView = 'view-intro';
+        window.currentRole = "";
+        window.isMusicOn = true;
+        window.isAudioUnlocked = false;
+        window.audio1 = null; window.audio2 = null;
+        window.user = null;
+        window.pendingSenderData = null;
+
+        const apiKey = ""; 
+        const modelName = "gemini-2.5-flash-preview-09-2025";
+
+        const fallbackItemsBase = [
+            { name: "眼罩", icon: "🕶️" }, { name: "耳栓", icon: "👂" }, { name: "シャツ", icon: "👔" },
+            { name: "万年筆", icon: "✒️" }, { name: "お守り", icon: "⛩️" }, { name: "モバイルバッテリー", icon: "🔋" },
+            { name: "常備薬", icon: "💊" }, { name: "眼鏡拭き", icon: "👓" }, { name: "除菌シート", icon: "✨" }
+        ];
+
+        // Auth
+        const initAuth = async () => {
+            try {
+                await signInAnonymously(auth);
+            } catch(e) {
+                console.warn("Auth failed, continuing without auth:", e);
+                document.getElementById('app-loading').style.display = 'none';
+                checkDeepLink();
+            }
+        };
+        initAuth();
+
+        onAuthStateChanged(auth, (u) => {
+            window.user = u;
+            document.getElementById('app-loading').style.display = 'none';
+            checkDeepLink();
+        });
+
+        async function checkDeepLink() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const packageId = urlParams.get('id');
+            if (packageId && window.user) {
+                try {
+                    const docRef = doc(db, 'artifacts', appId, 'public', 'data', 'packages', packageId);
+                    const docSnap = await getDoc(docRef);
+                    if (docSnap.exists()) {
+                        const data = docSnap.data();
+                        window.pendingSenderData = data;
+                        const receiverRole = data.role === 'child' ? 'father' : 'child';
+                        setupReceiverMode(receiverRole);
+                    }
+                } catch (e) { console.error("Link load error", e); }
+            }
+        }
+
+        function setupReceiverMode(role) {
+            window.currentRole = role;
+            document.getElementById('pack-title').innerText = role === 'child' ? '子の荷造り（独り立ち）' : '父の荷造り（出張）';
+            document.getElementById('pack-subtitle').innerText = "相手の想いを見る前に、まずはあなたの荷造りをしましょう。";
+            
+            const sendBtn = document.getElementById('save-send-btn');
+            const revealBtn = document.getElementById('reveal-sender-btn');
+            sendBtn.classList.add('hidden');
+            revealBtn.classList.remove('hidden');
+            document.getElementById('letter-hint').innerText = "✨ あなた自身の想いを綴ってください";
+        }
+
+        // AI API
+        window.callGemini = async (prompt, sys = "") => {
+            if (!apiKey) throw new Error('No API key');
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+            const res = await fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{ parts: [{ text: prompt }] }],
+                    systemInstruction: { parts: [{ text: sys }] },
+                    generationConfig: { responseMimeType: "application/json" }
+                })
+            });
+            if (!res.ok) throw new Error(`API error ${res.status}`);
+            const data = await res.json();
+            return JSON.parse(data.candidates[0].content.parts[0].text);
+        };
+
+        // Logic
+        window.saveAndShare = async () => {
+            if (!window.user) return;
+            const btn = document.getElementById('save-send-btn');
+            const originalText = btn.innerText;
+            btn.innerText = "想いを保存中...";
+            btn.disabled = true;
+
+            const packageId = crypto.randomUUID();
+            const payload = {
+                items: window.packedItems,
+                tags: Array.from(window.selectedTags),
+                letter: document.getElementById('letter-display').innerText,
+                role: window.currentRole,
+                situation: document.getElementById('situation-input').value,
+                timestamp: Date.now()
+            };
+
+            try {
+                await setDoc(doc(db, 'artifacts', appId, 'public', 'data', 'packages', packageId), payload);
+                const shareUrl = `${window.location.origin}${window.location.pathname}?id=${packageId}`;
+                document.getElementById('share-url-input').value = shareUrl;
+                document.getElementById('modal-link').style.display = 'flex';
+                btn.innerText = originalText;
+                btn.disabled = false;
+            } catch (e) {
+                btn.innerText = originalText; btn.disabled = false;
+                alert("保存エラー: " + e.message);
+            }
+        };
+
+        window.startReveal = () => {
+            if (window.pendingSenderData) {
+                startReceiverExperience(window.pendingSenderData);
+            }
+        };
+
+        async function startReceiverExperience(data) {
+            window.nextView('view-receive');
+            const targetName = data.role === 'child' ? 'お父さん' : 'あなた';
+            document.getElementById('receive-title').innerText = `${targetName}へ、荷物が届きました`;
+            const sc = document.getElementById('receive-suitcase');
+            sc.innerHTML = '';
+            for (const item of data.items) {
+                await new Promise(r => setTimeout(r, 800));
+                const div = document.createElement('div');
+                div.className = 'item-card item-in-suitcase';
+                div.innerHTML = `<span>${item.icon}</span> ${item.name}`;
+                sc.appendChild(div);
+            }
+            await new Promise(r => setTimeout(r, 1000));
+            document.getElementById('receive-step-1').classList.remove('active');
+            document.getElementById('receive-step-2').classList.add('active');
+            const bc = document.getElementById('receive-bubbles');
+            bc.innerHTML = '';
+            data.tags.forEach((tag, idx) => {
+                const b = document.createElement('div');
+                b.className = 'bubble fade-in';
+                b.style.animationDelay = `${idx * 0.2}s`;
+                b.innerHTML = tag;
+                bc.appendChild(b);
+            });
+            document.getElementById('receive-letter').innerText = data.letter;
+        }
+
+        window.showReceiveLetter = () => {
+            document.getElementById('receive-step-2').classList.remove('active');
+            document.getElementById('receive-step-3').classList.add('active');
+        };
+
+        window.finalAccept = () => {
+            alert("想いを受け取りました。温かな時間をありがとうございました。");
+            window.location.href = window.location.origin + window.location.pathname;
+        };
+
+        window.copyLink = () => {
+            const input = document.getElementById('share-url-input');
+            input.select();
+            document.execCommand('copy');
+            alert("リンクをコピーしました。LINEに貼り付けて送ってください。");
+        };
+
+        window.closeModal = () => { document.getElementById('modal-link').style.display = 'none'; };
+
+    </script>
+
+    <script>
+        // UI Logic
+        let itemReserve = []; let currentCandidates = []; let displayedTagsSet = new Set();
+        // 大幅拡充したフォールバック物品リスト
+        const fallbackItems = [
+            { name: "シャツ", icon: "👔" }, { name: "モバイルバッテリー", icon: "🔋" }, { name: "常備薬", icon: "�" },
+            { name: "お守り", icon: "⛩️" }, { name: "万年筆", icon: "✒️" }, { name: "除菌シート", icon: "🧴" },
+            { name: "折りたたみ傘", icon: "☂️" }, { name: "ハンカチ", icon: "🤍" }, { name: "爪切り", icon: "✂️" },
+            { name: "日焼け止め", icon: "🌞" }, { name: "絆創膏", icon: "🩹" }, { name: "耳栓", icon: "👂" },
+            { name: "アイマスク", icon: "😴" }, { name: "スリッパ", icon: "🥿" }, { name: "洗濯ネット", icon: "🧺" },
+            { name: "圧縮袋", icon: "🎒" }, { name: "変換プラグ", icon: "🔌" }, { name: "南京錠", icon: "🔒" },
+            { name: "ネックピロー", icon: "💤" }, { name: "水筒", icon: "🫗" }, { name: "エコバッグ", icon: "🛍️" },
+            { name: "メモ帳", icon: "📓" }, { name: "ボールペン", icon: "🖊️" }, { name: "名刺入れ", icon: "💼" },
+            { name: "充電ケーブル", icon: "🔌" }, { name: "イヤホン", icon: "🎧" }, { name: "サングラス", icon: "🕶️" },
+            { name: "腕時計", icon: "⌚" }, { name: "財布", icon: "👛" }, { name: "パスポートケース", icon: "🛂" },
+            { name: "洗顔料", icon: "🧼" }, { name: "歯ブラシセット", icon: "🪥" }, { name: "シャンプー", icon: "🧴" },
+            { name: "タオル", icon: "🏖️" }, { name: "スーツ袋", icon: "👗" }, { name: "靴下", icon: "🧦" },
+            { name: "下着", icon: "👕" }, { name: "パジャマ", icon: "🌙" }, { name: "スニーカー", icon: "👟" },
+            { name: "雨具", icon: "🌧️" }, { name: "地図アプリ", icon: "🗺️" }, { name: "翻訳機", icon: "🌐" },
+            { name: "緊急連絡先メモ", icon: "📋" }, { name: "保険証コピー", icon: "📄" }, { name: "現金", icon: "💴" },
+            { name: "クレジットカード", icon: "💳" }, { name: "ポケットWi-Fi", icon: "📶" }, { name: "カメラ", icon: "📷" },
+            { name: "日記帳", icon: "📔" }, { name: "お気に入りの本", icon: "📚" }, { name: "家族の写真", icon: "🖼️" },
+            { name: "お菓子", icon: "🍬" }, { name: "インスタント食品", icon: "🍜" }, { name: "緑茶パック", icon: "🍵" },
+            { name: "マスク", icon: "😷" }, { name: "体温計", icon: "🌡️" }, { name: "目薬", icon: "👁️" },
+            { name: "胃薬", icon: "💊" }, { name: "ビタミン剤", icon: "🌿" }, { name: "ハンドクリーム", icon: "🤲" },
+            { name: "リップクリーム", icon: "💋" }, { name: "ヘアゴム", icon: "💇" }, { name: "鏡", icon: "🪞" },
+        ];
+
+        // ドラッグ状態
+        let dragItem = null;
+        let dragEl = null;
+        const proxy = () => document.getElementById('drag-proxy');
+
+        window.handleStartClick = (e) => { e.stopPropagation(); window.unlockAudio(); window.nextView('view-role'); };
+
+        window.selectRole = (role) => {
+            window.currentRole = role;
+            document.getElementById('pack-title').innerText = role === 'child' ? '父の荷造り' : '子の荷造り';
+            window.nextView('view-pack');
+        };
+
+        window.nextView = (id) => {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.currentView = id;
+            if (window.isAudioUnlocked && window.isMusicOn) updateMusic();
+            if (id === 'view-pack') initialItemLoad();
+            if (id === 'view-reason') {
+                document.getElementById('bubble-container').innerHTML = '';
+                displayedTagsSet.clear();
+                window.selectedTags.clear();
+                document.getElementById('final-send-btn-container').style.display = 'none';
+                generateBubbles(true);
+            }
+        };
+
+        async function initialItemLoad() {
+            document.getElementById('item-pool').innerHTML = '';
+            itemReserve = []; currentCandidates = [];
+            await fetchMoreItems(); refillCandidates();
+        }
+
+        window.manualRefresh = async () => {
+            const btn = document.getElementById('refresh-btn');
+            btn.classList.add('animate-spin');
+            // 刷新时清空候选区，但保留reserve中未展示的
+            currentCandidates = [];
+            if (itemReserve.length < 6) await fetchMoreItems();
+            refillCandidates();
+            setTimeout(() => btn.classList.remove('animate-spin'), 600);
+        };
+
+        async function fetchMoreItems(clear = false) {
+            if (window.isGeneratingItems) return;
+            window.isGeneratingItems = true;
+            if (clear) itemReserve = [];
+            const packedNames = window.packedItems.map(p => p.name);
+            const candidateNames = currentCandidates.map(c => c.name);
+            const excludeNames = [...packedNames, ...candidateNames];
+            const situation = document.getElementById('situation-input')?.value || "通常";
+            const sys = "ギフトアドバイザー。JSON { items: [{ name: string, icon: string }] }のみ返す。";
+            const prompt = `${window.currentRole === 'child' ? '父の出張' : '子の一人暮らし'}に必要な具体的な持ち物30個。状況：${situation}。以下は除外: [${excludeNames.join(', ')}]。日本語で。`;
+            try {
+                const res = await window.callGemini(prompt, sys);
+                const newItems = res.items.filter(item =>
+                    !packedNames.includes(item.name) &&
+                    !itemReserve.some(r => r.name === item.name)
+                );
+                itemReserve = [...itemReserve, ...newItems];
+            } catch (e) {
+                // フォールバック：既にpackedやreserveにないものだけ追加
+                const extras = fallbackItems
+                    .filter(f => !packedNames.includes(f.name) && !itemReserve.some(r => r.name === f.name))
+                    .sort(() => 0.5 - Math.random())
+                    .slice(0, 12);
+                itemReserve = [...itemReserve, ...extras];
+            } finally {
+                window.isGeneratingItems = false;
+            }
+        }
+
+        function refillCandidates() {
+            const packedNames = window.packedItems.map(p => p.name);
+            // reserveからpacked済みを除外しながら6個補充
+            while (currentCandidates.length < 6 && itemReserve.length > 0) {
+                const next = itemReserve.shift();
+                if (!packedNames.includes(next.name) && !currentCandidates.some(c => c.name === next.name)) {
+                    currentCandidates.push(next);
+                }
+            }
+            renderPool();
+            // reserveが少なくなったら非同期で補充
+            if (itemReserve.length < 10) fetchMoreItems();
+        }
+
+        function renderPool() {
+            const pool = document.getElementById('item-pool');
+            pool.innerHTML = '';
+            currentCandidates.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-card fade-in';
+                div.innerHTML = `<span>${item.icon}</span><span>${item.name}</span>`;
+                // タップで追加
+                div.addEventListener('click', (e) => {
+                    if (div.dataset.dragged === 'true') { div.dataset.dragged = 'false'; return; }
+                    addItem(item, div);
+                });
+                // ドラッグ開始（マウス）
+                div.addEventListener('mousedown', (e) => startDrag(e, item, div));
+                // ドラッグ開始（タッチ）
+                div.addEventListener('touchstart', (e) => startDrag(e, item, div), { passive: false });
+                pool.appendChild(div);
+            });
+        }
+
+        // ---- ドラッグ実装 ----
+        function startDrag(e, item, el) {
+            dragItem = item;
+            dragEl = el;
+            const p = proxy();
+            p.innerHTML = `<span>${item.icon}</span> ${item.name}`;
+            p.style.display = 'block';
+            moveProxy(e);
+            el.classList.add('dragging');
+
+            document.addEventListener('mousemove', onDragMove);
+            document.addEventListener('mouseup', onDragEnd);
+            document.addEventListener('touchmove', onDragMove, { passive: false });
+            document.addEventListener('touchend', onDragEnd);
+        }
+
+        function moveProxy(e) {
+            const p = proxy();
+            const x = e.touches ? e.touches[0].clientX : e.clientX;
+            const y = e.touches ? e.touches[0].clientY : e.clientY;
+            p.style.left = (x - p.offsetWidth / 2) + 'px';
+            p.style.top = (y - p.offsetHeight / 2) + 'px';
+
+            // スーツケースのhover判定
+            const sc = document.getElementById('suitcase');
+            const rect = sc.getBoundingClientRect();
+            if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                sc.classList.add('drag-over');
+            } else {
+                sc.classList.remove('drag-over');
+            }
+        }
+
+        function onDragMove(e) {
+            if (!dragItem) return;
+            if (e.touches) e.preventDefault();
+            moveProxy(e);
+        }
+
+        function onDragEnd(e) {
+            if (!dragItem) return;
+            const p = proxy();
+            p.style.display = 'none';
+            const sc = document.getElementById('suitcase');
+            sc.classList.remove('drag-over');
+
+            const x = e.changedTouches ? e.changedTouches[0].clientX : e.clientX;
+            const y = e.changedTouches ? e.changedTouches[0].clientY : e.clientY;
+            const rect = sc.getBoundingClientRect();
+
+            if (x >= rect.left && x <= rect.right && y >= rect.top && y <= rect.bottom) {
+                // スーツケース内にドロップ
+                if (dragEl) dragEl.dataset.dragged = 'true';
+                addItem(dragItem, dragEl);
+            } else {
+                // キャンセル
+                if (dragEl) dragEl.classList.remove('dragging');
+            }
+
+            document.removeEventListener('mousemove', onDragMove);
+            document.removeEventListener('mouseup', onDragEnd);
+            document.removeEventListener('touchmove', onDragMove);
+            document.removeEventListener('touchend', onDragEnd);
+            dragItem = null; dragEl = null;
+        }
+
+        function addItem(item, sourceEl) {
+            if (window.packedItems.length >= 40) return;
+            if (window.packedItems.some(p => p.name === item.name)) return;
+            window.packedItems.push(item);
+            document.getElementById('suitcase-empty').classList.add('hidden');
+            currentCandidates = currentCandidates.filter(c => c.name !== item.name);
+            const div = document.createElement('div');
+            div.className = 'item-card item-in-suitcase';
+            div.innerHTML = `<span>${item.icon}</span><span>${item.name}</span>`;
+            document.getElementById('suitcase').appendChild(div);
+            refillCandidates();
+            if (window.packedItems.length >= 3) document.getElementById('pack-complete-btn').classList.remove('hidden');
+            showAiAdvice(item);
+        }
+
+        async function showAiAdvice(item) {
+            const bubble = document.getElementById('ai-advice-bubble');
+            bubble.style.opacity = 1;
+            const prompt = `${item.name}を荷物に入れた${window.currentRole === 'child' ? '子から父' : '父から子'}への一言。温かく短く。JSON { text: string }。`;
+            try {
+                const res = await window.callGemini(prompt, "心配性な家族として日本語で。");
+                bubble.innerText = `✨ ${res.text}`;
+            } catch (e) { bubble.innerText = `✨ ${item.name}、大切に使ってね。`; }
+            setTimeout(() => { bubble.style.opacity = 0; }, 4500);
+        }
+
+        const fallbackTags = [
+            { icon: "🧳", text: "旅先でも元気でいてほしいから" },
+            { icon: "💊", text: "体調を崩さないように、いつも心配しているから" },
+            { icon: "🌙", text: "夜、一人でも安心して眠れるように" },
+            { icon: "☀️", text: "毎朝、気持ちよく一日を始めてほしいから" },
+            { icon: "🤝", text: "困ったとき、これがあれば助かると思って" },
+            { icon: "💌", text: "離れていても、そばにいる気持ちを込めて" },
+            { icon: "🌿", text: "自分を大切にしてほしいから" },
+            { icon: "🔋", text: "いつでも連絡が取れるように" },
+            { icon: "🍵", text: "疲れたとき、ほっと一息ついてほしいから" },
+            { icon: "🛡️", text: "何があっても守ってあげたいから" },
+            { icon: "📸", text: "大切な瞬間を残してほしいから" },
+            { icon: "🌸", text: "新しい場所でも、笑顔でいてほしいから" },
+            { icon: "🧭", text: "迷ったとき、正しい道を見つけられるように" },
+            { icon: "🎒", text: "身軽に、でも万全の準備で旅立ってほしいから" },
+            { icon: "🏠", text: "どこにいても、家の温かさを感じてほしいから" },
+            { icon: "⛩️", text: "お守りのように、いつも一緒にいたいから" },
+            { icon: "📞", text: "いつでも声が聞きたいから" },
+            { icon: "🌟", text: "あなたの頑張りを、ずっと応援しているから" },
+            { icon: "🧤", text: "寒い夜も、温かくいてほしいから" },
+            { icon: "💪", text: "どんな困難も乗り越えられると信じているから" },
+            { icon: "🎵", text: "孤独を感じたとき、音楽が寄り添ってくれるように" },
+            { icon: "📖", text: "知識と共に、心も豊かに育ってほしいから" },
+            { icon: "🌈", text: "雨の日も、明るい気持ちでいてほしいから" },
+            { icon: "🍱", text: "ちゃんと食べて、元気でいてほしいから" },
+            { icon: "🧸", text: "子どもの頃の記憶を、いつも胸に持っていてほしいから" },
+            { icon: "✉️", text: "言葉にできない想いを、形にしたかったから" },
+            { icon: "🕯️", text: "暗い夜も、小さな光があれば大丈夫だから" },
+            { icon: "🌊", text: "どんな波にも流されず、自分らしくいてほしいから" },
+            { icon: "🦋", text: "新しい世界で、自由に羽ばたいてほしいから" },
+            { icon: "🤗", text: "会えない分、これに気持ちを込めたから" },
+            { icon: "🌻", text: "太陽のように、周りを明るくしてほしいから" },
+            { icon: "🧩", text: "困ったとき、きっと役に立つと思って" },
+            { icon: "💎", text: "あなたにとって大切なものを守ってほしいから" },
+            { icon: "🗺️", text: "知らない場所でも、迷わず進んでほしいから" },
+            { icon: "🌙", text: "夢を持ち続けてほしいから" },
+            { icon: "🫂", text: "いつでも抱きしめてあげたい気持ちを込めて" },
+            { icon: "🎯", text: "目標に向かって、諦めないでほしいから" },
+            { icon: "🌺", text: "どこにいても、美しいものを見つけてほしいから" },
+            { icon: "🧡", text: "ただ、幸せでいてほしいから" },
+            { icon: "🕊️", text: "穏やかな毎日を過ごしてほしいから" },
+        ];
+
+        async function generateBubbles(isInitial = false) {
+            const itemsStr = window.packedItems.map(i => i.name).join(', ');
+            const target = window.currentRole === 'child' ? '父' : '子';
+            const sys = `家族の想いを言語化する詩人。JSON { tags: [{ text: string, icon: string }] }のみ返す。`;
+            const prompt = `[${itemsStr}]を選んだ理由として、実用的・感情的・思い出の3視点から心温まる理由を40個。対象：${target}。日本語で。`;
+            let tags = [];
+            try {
+                const res = await window.callGemini(prompt, sys);
+                if (res && res.tags && res.tags.length > 0) {
+                    tags = res.tags;
+                } else {
+                    throw new Error('empty');
+                }
+            } catch (e) {
+                // APIが使えない場合はフォールバックリストをシャッフルして使う
+                tags = [...fallbackTags].sort(() => 0.5 - Math.random());
+            }
+            const container = document.getElementById('bubble-container');
+            tags.forEach(tag => {
+                if (displayedTagsSet.has(tag.text)) return;
+                displayedTagsSet.add(tag.text);
+                const b = document.createElement('div');
+                b.className = 'bubble fade-in';
+                b.innerHTML = `<span class="opacity-40 mr-2 text-lg">${tag.icon}</span><span>${tag.text}</span>`;
+                b.onclick = () => window.toggleTag(b, tag.text);
+                container.appendChild(b);
+            });
+        }
+
+        window.toggleTag = (el, text) => {
+            if (window.selectedTags.has(text)) { window.selectedTags.delete(text); el.classList.remove('bubble-selected'); }
+            else { window.selectedTags.add(text); el.classList.add('bubble-selected'); }
+            document.getElementById('final-send-btn-container').style.display =
+                (window.selectedTags.size >= window.packedItems.length) ? 'flex' : 'none';
+        };
+
+        window.handleScroll = (el) => {
+            if (el.scrollTop + el.clientHeight >= el.scrollHeight * 0.8) generateBubbles(false);
+        };
+
+        window.generateFinalLetter = async () => {
+            window.nextView('view-final');
+            const display = document.getElementById('letter-display');
+            display.innerHTML = `<div class="text-center py-20 text-sm opacity-40">✨ 手紙を綴っています...</div>`;
+            const prompt = `${window.currentRole === 'child' ? '子から父' : '父から子'}へ贈る感動的な手紙。アイテム：[${window.packedItems.map(i=>i.name).join('、')}]、想い：[${Array.from(window.selectedTags).join('、')}]。JSON { letter: string }。`;
+            try {
+                const res = await window.callGemini(prompt, "感動的な代筆作家。日本語で。");
+                display.innerText = res.letter;
+            } catch (e) { display.innerText = "想いを込めて準備しました。元気でね。"; }
+        };
+
+        window.unlockAudio = () => {
+            if (window.isAudioUnlocked) return;
+            window.audio1 = new Audio('nop.mp3');
+            window.audio2 = new Audio('bitter sweet chocolate.mp3');
+            window.audio1.loop = window.audio2.loop = true;
+            window.isAudioUnlocked = true;
+            updateMusic();
+        };
+
+        function updateMusic() {
+            const isAtmospheric = ['view-pack', 'view-reason', 'view-final', 'view-receive'].includes(window.currentView);
+            if (isAtmospheric) { window.audio1?.pause(); window.audio2?.play().catch(()=>{}); }
+            else { window.audio1?.play().catch(()=>{}); window.audio2?.pause(); }
+        }
+
+        window.toggleMusic = (e) => {
+            e.stopPropagation();
+            if (!window.isAudioUnlocked) { window.unlockAudio(); return; }
+            window.isMusicOn = !window.isMusicOn;
+            document.getElementById('music-icon-on').classList.toggle('hidden', !window.isMusicOn);
+            document.getElementById('music-icon-off').classList.toggle('hidden', window.isMusicOn);
+            if (window.isMusicOn) updateMusic(); else { window.audio1?.pause(); window.audio2?.pause(); }
+        };
+
+        window.handleGlobalClick = () => { if (!window.isAudioUnlocked) window.unlockAudio(); };
+
+        window.addEventListener('wheel', (e) => {
+            if (window.currentView === 'view-intro' && e.deltaY > 0) window.handleStartClick(e);
+        });
+    </script>
+</body>
+</html>
